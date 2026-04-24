@@ -1,0 +1,29 @@
+{
+    "extends": "expo/tsconfig.base",
+    "compilerOptions": {
+        "strict": true,
+        "noEmit": true,
+        "baseUrl": ".",
+        "moduleResolution": "bundler",
+        "moduleSuffixes": [".ios", ".android", ".native", ""],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "useDefineForClassFields": true,
+        "forceConsistentCasingInFileNames": true,
+        "paths": {
+            "@/*": ["./*"]
+        }
+    },
+    "include": [
+        "src",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.web.ts",
+        "**/*.web.tsx",
+        "**/*.native.ts",
+        "**/*.native.tsx",
+        ".expo/types/**/*.ts",
+        "expo-env.d.ts"
+    ],
+    "exclude": ["node_modules"]
+}

@@ -1,0 +1,76 @@
+{
+    "expo": {
+        "name": "Slop Battery",
+        "slug": "slop-battery",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#8ef5c5"
+        },
+        "scheme": "slopbattery",
+        "userInterfaceStyle": "automatic",
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "package": "com.slopcompany.slopbattery",
+            "adaptiveIcon": {
+                "backgroundColor": "#ffffff",
+                "foregroundImage": "./assets/images/adaptive-icon.png"
+            },
+            "predictiveBackGestureEnabled": false,
+            "permissions": [
+                "FOREGROUND_SERVICE",
+                "FOREGROUND_SERVICE_DATA_SYNC",
+                "WAKE_LOCK",
+                "POST_NOTIFICATIONS",
+                "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+                "RECEIVE_BOOT_COMPLETED"
+            ]
+        },
+        "web": {
+            "output": "static",
+            "favicon": "./assets/images/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-splash-screen",
+                {
+                    "image": "./assets/images/splash-icon.png",
+                    "imageWidth": 200,
+                    "resizeMode": "contain",
+                    "backgroundColor": "#ffffff",
+                    "dark": {
+                        "image": "./assets/images/splash-icon.png",
+                        "backgroundColor": "#000000"
+                    }
+                }
+            ],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "targetSdkVersion": 34,
+                        "compileSdkVersion": 35,
+                        "foregroundService": { "type": "dataSync" }
+                    }
+                }
+            ],
+            "./withNotifeeForegroundService.js"
+        ],
+        "experiments": {
+            "typedRoutes": true,
+            "reactCompiler": true
+        },
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": ""
+            }
+        }
+    }
+}
