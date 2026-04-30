@@ -1,6 +1,6 @@
 import { action, flowResult } from "mobx";
 import { observer, useLocalObservable } from "mobx-react-lite";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     AppState,
     Platform,
@@ -21,6 +21,7 @@ import * as RNExitApp from "@logicwind/react-native-exit-app";
 const Index = observer(() => {
     const notifierRef = useRef<BatteryNotificationManager | null>(null);
     const appState = useRef(AppState.currentState);
+    const [isUnsaved, setIsUnsaved] = useState(false);
 
     useEffect(() => {
         try {
@@ -67,6 +68,7 @@ const Index = observer(() => {
     }, []);
 
     const notifier = useMemo(() => createBatteryNotifier(), []);
+    const debounceTimerRef = useRef<NodeJS.Timeout>(null);
 
     // special threshold functions to (1) allow update of observable and (2) set value on blur
     const thresholdInput = useLocalObservable(() => ({
@@ -78,12 +80,31 @@ const Index = observer(() => {
     const updateThreshold = async (text: string) => {
         const num = Number(text);
         if (text === "" || isNaN(num)) {
-            setThresholdInput("90");
+            setThresholdInput(String(notifier.notificationThreshold));
+            setIsUnsaved(false);
             return;
         }
         const clamped = Math.min(100, Math.max(1, Math.round(num)));
         await notifier.setBatteryNotificationThreshold(clamped);
         setThresholdInput(String(clamped));
+        setIsUnsaved(false);
+    };
+    const handleThresholdChange = (t: string) => {
+        if (t.length <= 3) {
+            setIsUnsaved(true);
+            t = t ?? "";
+            setThresholdInput(t);
+
+            // Clear previous timer
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+
+            // Set new timer to save after 3 seconds of inactivity
+            debounceTimerRef.current = setTimeout(() => {
+                updateThreshold(t);
+            }, 3000);
+        }
     };
 
     const exitApp = async () => {
@@ -165,15 +186,13 @@ const Index = observer(() => {
                         </Pressable>
 
                         <TextInput
-                            style={styles.thresholdInput}
+                            style={[
+                                styles.thresholdInput,
+                                isUnsaved && { backgroundColor: "#e6291080" },
+                            ]}
                             keyboardType="numeric"
                             value={thresholdInput.value}
-                            onChangeText={(t) => {
-                                if (t.length <= 3) {
-                                    t = t ?? "1";
-                                    setThresholdInput(t);
-                                }
-                            }}
+                            onChangeText={handleThresholdChange}
                             onEndEditing={(e) =>
                                 updateThreshold(e.nativeEvent.text)
                             }
