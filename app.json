@@ -12,6 +12,9 @@
         },
         "scheme": "slopbattery",
         "userInterfaceStyle": "automatic",
+        "updates": {
+            "enabled": false
+        },
         "ios": {
             "supportsTablet": true
         },

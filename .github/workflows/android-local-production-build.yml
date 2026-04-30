@@ -1,0 +1,73 @@
+name: Android Local Production Build
+on:
+    workflow_dispatch: # Allows you to trigger it manually from the Actions tab
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "npm"
+
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: "temurin"
+                  java-version: "17"
+
+            - name: Setup Expo and EAS
+              uses: expo/expo-github-action@v8
+              with:
+                  expo-version: latest
+                  eas-version: latest
+                  token: ${{ secrets.EXPO_TOKEN }}
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run TypeScript Type Check
+              # Return error state if there are any typescript errors
+              run: npx tsc --noEmit
+
+            - name: Clean and Prebuild native directories
+              run: npx expo prebuild --platform android --clean
+
+            - name: Inspect AndroidManifest.xml
+              continue-on-error: true # prevents the build from failing
+              run: |
+                  MANIFEST_PATH="./android/app/src/main/AndroidManifest.xml"
+
+                  if [ -f "$MANIFEST_PATH" ]; then
+                    echo "--- START OF MANIFEST ---"
+                    cat "$MANIFEST_PATH"
+                    echo "--- END OF MANIFEST ---"
+                  else
+                    echo "Error: AndroidManifest.xml not found at $MANIFEST_PATH"
+                    exit 1
+                  fi
+
+            - name: Build Android Locally
+              # The --local flag builds on GitHub's VM instead of Expo's cloud
+              run: eas build -p android --profile production --local --non-interactive --clear-cache
+
+            - name: Get version from package.json
+              id: package-version
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+                  echo "BUILD_NAME=app-v$VERSION-${{ github.run_number }}.apk" >> $GITHUB_OUTPUT
+
+            - name: Rename and Upload APK
+              uses: actions/upload-artifact@v4
+              with:
+                  # This name appears in the GitHub Actions UI
+                  name: ${{ steps.package-version.outputs.BUILD_NAME }}
+                  # This finds the generated apk and renames it during upload
+                  path: ./*.apk
+                  retention-days: 1
